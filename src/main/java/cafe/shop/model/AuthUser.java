@@ -4,7 +4,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
 import java.util.Collection;
-import java.util.UUID;
 
 public class AuthUser extends User {
 
@@ -13,8 +12,6 @@ public class AuthUser extends User {
     private boolean isVerify2Fa;
     private boolean isUsing2FA;
     private boolean isLogin2FA;
-    private UUID merchantId;
-    private String merchantName;
 
     public AuthUser(String username, String password, Collection<? extends GrantedAuthority> authorities) {
         super(username, password, authorities);
@@ -58,21 +55,5 @@ public class AuthUser extends User {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
-    }
-
-    public UUID getMerchantId() {
-        return merchantId;
-    }
-
-    public void setMerchantId(UUID merchantId) {
-        this.merchantId = merchantId;
-    }
-
-    public String getMerchantName() {
-        return merchantName;
-    }
-
-    public void setMerchantName(String merchantName) {
-        this.merchantName = merchantName;
     }
 }

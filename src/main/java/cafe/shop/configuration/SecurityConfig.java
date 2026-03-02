@@ -36,12 +36,13 @@ public class SecurityConfig  {
                         .requestMatchers("/api/v1/admin").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/franchises/*/menu").hasAnyRole("ADMIN", "OPERATOR", "CUSTOMER")
-                        .requestMatchers("/api/v1/franchises/nearby").hasRole("CUSTOMER")
-                        .requestMatchers("/api/v1/franchises", "/api/v1/franchises/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/terminals/*/recipes").hasAnyRole("ADMIN", "OPERATOR", "CUSTOMER")
+                        .requestMatchers("/api/v1/terminals/nearby").hasRole("CUSTOMER")
+                        .requestMatchers("/api/v1/terminals", "/api/v1/terminals/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/queues", "/api/v1/queues/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers("/api/v1/users", "/api/v1/users/**").hasAnyRole("ADMIN", "OPERATOR", "CUSTOMER")
                         .requestMatchers("/api/v1/orders/**").hasAnyRole("ADMIN", "OPERATOR", "CUSTOMER")
+                        .requestMatchers("/api/v1/product-authorizations/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers("/api/v1/customers/register").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -60,6 +61,4 @@ public class SecurityConfig  {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-
 }

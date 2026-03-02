@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -20,5 +19,7 @@ public class OrderDetailDto {
     private String customerPhone;
     private String customerAddress;
     private OrderStatus status;
-    private List<OrderItemDto> orderItemList;
+    private String recipeName;
+    private double volume;
+    private String destinationId;
 }

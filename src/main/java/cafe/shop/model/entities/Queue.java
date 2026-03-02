@@ -19,8 +19,8 @@ public class Queue extends BaseTimestamp {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "franchise_id", nullable = false)
-    private Franchise franchise;
+    @JoinColumn(name = "terminal_id", nullable = false)
+    private Terminal terminal;
 
     @Column(name = "queue_number", nullable = false)
     private int queueNumber;
@@ -30,5 +30,4 @@ public class Queue extends BaseTimestamp {
 
     @OneToMany(mappedBy = "queue", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Order> orders = new HashSet<>();
-
 }

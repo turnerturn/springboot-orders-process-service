@@ -1,10 +1,10 @@
 package cafe.shop.controller;
 
 import cafe.shop.model.dto.*;
-import cafe.shop.model.entities.Franchise;
+import cafe.shop.model.entities.Terminal;
 import cafe.shop.service.CustomerService;
-import cafe.shop.service.FranchiseService;
 import cafe.shop.service.QueueService;
+import cafe.shop.service.TerminalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,15 +23,14 @@ public class QueueController {
     CustomerService customerService;
 
     @Autowired
-    FranchiseService franchiseService;
+    TerminalService terminalService;
 
     @GetMapping
-    public ResponseEntity<List<QueueDto>> getQueueByFranchise(@RequestParam(value = "franchiseId") UUID franchiseId) {
-        Franchise franchise = franchiseService.getFranchise(franchiseId);
-        List<QueueDto> queueList = queueService.getQueuesByFranchise(franchise);
+    public ResponseEntity<List<QueueDto>> getQueueByTerminal(@RequestParam(value = "terminalId") UUID terminalId) {
+        Terminal terminal = terminalService.getTerminal(terminalId);
+        List<QueueDto> queueList = queueService.getQueuesByTerminal(terminal);
         return ResponseEntity.ok(queueList);
     }
-
 
     @GetMapping("/{queueId}/status")
     public ResponseEntity<QueueStatusDto> getQueueStatus(@PathVariable UUID queueId) {

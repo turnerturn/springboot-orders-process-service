@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class FranchiseDto {
+public class TerminalDto {
 
     private UUID id;
     private String name;

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Create terminals table -->
+    <changeSet id="13" author="refactor">
+        <sqlFile path="db/sql/1.2/terminals.sql"/>
+    </changeSet>
+
+    <!-- Create recipes table -->
+    <changeSet id="14" author="refactor">
+        <sqlFile path="db/sql/1.2/recipes.sql"/>
+    </changeSet>
+
+    <!-- Create products table -->
+    <changeSet id="15" author="refactor">
+        <sqlFile path="db/sql/1.2/products.sql"/>
+    </changeSet>
+
+    <!-- Create additives table -->
+    <changeSet id="16" author="refactor">
+        <sqlFile path="db/sql/1.2/additives.sql"/>
+    </changeSet>
+
+    <!-- Create product_authorizations table -->
+    <changeSet id="17" author="refactor">
+        <sqlFile path="db/sql/1.2/product_authorizations.sql"/>
+    </changeSet>
+
+    <!-- Alter queues table: add terminal_id, keep franchise_id for now then drop -->
+    <changeSet id="18" author="refactor">
+        <sqlFile path="db/sql/1.2/alter_queues.sql"/>
+    </changeSet>
+
+    <!-- Alter orders table: add terminal_id, recipe_id, volume, destination_id -->
+    <changeSet id="19" author="refactor">
+        <sqlFile path="db/sql/1.2/alter_orders.sql"/>
+    </changeSet>
+
+    <!-- Alter customer_scores table: add terminal_id -->
+    <changeSet id="20" author="refactor">
+        <sqlFile path="db/sql/1.2/alter_customer_scores.sql"/>
+    </changeSet>
+
+    <!-- Alter c_users table: drop merchant_id -->
+    <changeSet id="21" author="refactor">
+        <sqlFile path="db/sql/1.2/alter_c_users.sql"/>
+    </changeSet>
+
+</databaseChangeLog>

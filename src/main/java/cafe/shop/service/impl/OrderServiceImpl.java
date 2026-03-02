@@ -2,14 +2,14 @@ package cafe.shop.service.impl;
 
 import cafe.shop.common.GenericSpecification;
 import cafe.shop.exception.CustomerAlreadyExistsException;
-import cafe.shop.exception.FranchiseNotFoundException;
 import cafe.shop.exception.ResourceNotFoundException;
+import cafe.shop.exception.TerminalNotFoundException;
 import cafe.shop.model.constant.OrderStatus;
 import cafe.shop.model.dto.*;
 import cafe.shop.model.entities.*;
-import cafe.shop.repository.FranchiseRepository;
-import cafe.shop.repository.MenuItemRepository;
 import cafe.shop.repository.OrderRepository;
+import cafe.shop.repository.RecipeRepository;
+import cafe.shop.repository.TerminalRepository;
 import cafe.shop.repository.UserRepository;
 import cafe.shop.service.BaseService;
 import cafe.shop.service.OrderService;
@@ -18,27 +18,23 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Log4j2
 public class OrderServiceImpl extends BaseService implements OrderService {
 
-
     @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
-    private MenuItemRepository menuItemRepository;
+    private RecipeRepository recipeRepository;
 
     @Autowired
     private QueueService queueService;
@@ -47,7 +43,7 @@ public class OrderServiceImpl extends BaseService implements OrderService {
     private UserRepository userRepository;
 
     @Autowired
-    private FranchiseRepository franchiseRepository;
+    private TerminalRepository terminalRepository;
 
     @Override
     public Page<OrderDto> getOrderListByCustomer(Map<String, Object> params, Pageable pageable) {
@@ -71,39 +67,25 @@ public class OrderServiceImpl extends BaseService implements OrderService {
     @Override
     @Transactional
     public OrderDto placeOrder(OrderRequest request) {
-
-        // Fetch franchise and user
-        Franchise franchise = franchiseRepository.findById(request.getFranchiseId())
-                .orElseThrow(() -> new FranchiseNotFoundException("Franchise not found"));
+        Terminal terminal = terminalRepository.findById(request.getTerminalId())
+                .orElseThrow(() -> new TerminalNotFoundException("Terminal not found"));
         User user = userRepository.findById(UUID.fromString(currentUser().getId()))
                 .orElseThrow(() -> new CustomerAlreadyExistsException("User not found"));
+        Recipe recipe = recipeRepository.findById(request.getRecipeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Recipe not found"));
 
-        // Create and save the order
         Order order = new Order();
         order.setCustomer(user);
-        order.setFranchise(franchise);
+        order.setTerminal(terminal);
+        order.setRecipe(recipe);
+        order.setVolume(request.getVolume());
+        order.setDestinationId(request.getDestinationId());
         order.setOrderNumber(generateOrderNumber());
         order.setStatus(OrderStatus.NEW);
         orderRepository.save(order);
 
-        // Add items to the order
         log.info("[processOrder: {}] - Created new order", order.getId());
-        List<OrderItem> orderItems = request.getItems().stream().map(itemRequest -> {
-            MenuItem menuItem = menuItemRepository.findById(itemRequest.getMenuItemId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Menu item not found"));
-            OrderItem orderItem = new OrderItem();
-            orderItem.setMenuItem(menuItem);
-            orderItem.setQuantity(itemRequest.getQuantity());
-            orderItem.setOrder(order);
-            return orderItem;
-        }).collect(Collectors.toList());
 
-        order.setOrderItems(orderItems);
-        orderRepository.save(order);
-
-        log.info("[processOrder: {}] - Added menu {} items to order", order.getId(), orderItems.size());
-
-        // Add order to queue
         Queue queue = queueService.addOrderToQueue(order, user);
         order.setQueue(queue);
         order.setStatus(OrderStatus.PROCESS);
@@ -111,8 +93,7 @@ public class OrderServiceImpl extends BaseService implements OrderService {
         log.info("[processOrder: {}] - Added order to queue {}", order.getId(), queue.getId());
 
         int queuePosition = queueService.getCustomerQueueSize(queue);
-        int waitingTime = calculateExpectedWaitingTime(franchise);
-
+        int waitingTime = calculateExpectedWaitingTime(terminal);
 
         return OrderDto.builder()
                 .orderId(order.getId())
@@ -129,7 +110,7 @@ public class OrderServiceImpl extends BaseService implements OrderService {
 
         Queue queue = order.getQueue();
         int queuePosition = queueService.getCustomerQueueSize(queue);
-        int waitingTime = calculateExpectedWaitingTime(order.getFranchise());
+        int waitingTime = calculateExpectedWaitingTime(order.getTerminal());
 
         return new QueuePositionDto(queuePosition, waitingTime);
     }
@@ -139,23 +120,16 @@ public class OrderServiceImpl extends BaseService implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        OrderDetailDto dto =  OrderDetailDto.builder()
+        return OrderDetailDto.builder()
                 .orderId(order.getId())
                 .orderNumber(order.getOrderNumber())
                 .customerName(order.getCustomer().getFirstName())
                 .customerPhone(order.getCustomer().getMobileNumber())
                 .status(order.getStatus())
+                .recipeName(order.getRecipe().getName())
+                .volume(order.getVolume())
+                .destinationId(order.getDestinationId())
                 .build();
-
-        List<OrderItemDto> orderItemDtoList = order.getOrderItems()
-                .stream().map(item -> OrderItemDto.builder()
-                        .name(item.getMenuItem().getName())
-                        .quantity(item.getQuantity())
-                        .build())
-                .collect(Collectors.toList());
-        dto.setOrderItemList(orderItemDtoList);
-
-        return dto;
     }
 
     @Override
@@ -173,15 +147,11 @@ public class OrderServiceImpl extends BaseService implements OrderService {
         log.info("[processCancelOrder: {}] - Mark cancel order", order.getId());
     }
 
-    private int calculateExpectedWaitingTime(Franchise franchise) {
-        // Logic to calculate waiting time based on franchise queue length and other factors
-        // For example, assume a constant waiting time for simplicity
-        return 15; // Example waiting time in minutes
+    private int calculateExpectedWaitingTime(Terminal terminal) {
+        return 15;
     }
 
     private String generateOrderNumber() {
-        // Generate a unique order number
         return "O-" + RandomStringUtils.randomAlphanumeric(12).toUpperCase();
     }
-
 }

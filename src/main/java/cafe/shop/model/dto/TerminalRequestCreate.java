@@ -1,13 +1,11 @@
 package cafe.shop.model.dto;
 
-import jakarta.persistence.Column;
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Data
-public class FranchiseRequestCreate {
+public class TerminalRequestCreate {
 
     private String location;
     private String name;

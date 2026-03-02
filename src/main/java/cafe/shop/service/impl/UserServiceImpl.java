@@ -3,9 +3,7 @@ package cafe.shop.service.impl;
 import cafe.shop.model.dto.RequestCreateAdminUser;
 import cafe.shop.model.constant.UserRole;
 import cafe.shop.model.dto.RequestCreateUser;
-import cafe.shop.model.entities.Merchant;
 import cafe.shop.model.entities.User;
-import cafe.shop.repository.MerchantRepository;
 import cafe.shop.repository.UserRepository;
 import cafe.shop.service.BaseService;
 import cafe.shop.service.UserService;
@@ -22,29 +20,20 @@ public class UserServiceImpl extends BaseService implements UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private MerchantRepository merchantRepository;
-
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
     public void createAdminUser(RequestCreateAdminUser requestCreateAdminUser) {
         log.info("Request admin user: {}", requestCreateAdminUser.toString());
-        Merchant merchant = new Merchant();
-        merchant.setName(requestCreateAdminUser.getMerchant());
-        merchantRepository.save(merchant);
 
         User adminUser = new User();
         adminUser.setUsername(requestCreateAdminUser.getUsername());
         adminUser.setPassword(passwordEncoder.encode(requestCreateAdminUser.getPassword()));
         adminUser.setRole(UserRole.ADMIN);
-        adminUser.setMerchant(merchant);
 
         userRepository.save(adminUser);
 
         log.info("Created successfully: {}", adminUser.getId());
-
     }
 
     @Override
@@ -54,7 +43,6 @@ public class UserServiceImpl extends BaseService implements UserService {
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
-        merchantRepository.findById(currentUser().getMerchantId()).ifPresent(user::setMerchant);
         user = userRepository.save(user);
         log.info("Created successfully: {}", user.getId());
         return user;

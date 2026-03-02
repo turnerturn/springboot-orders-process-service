@@ -4,16 +4,14 @@ import cafe.shop.model.BaseTimestamp;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "franchises")
-public class Franchise extends BaseTimestamp {
+@Table(name = "terminals")
+public class Terminal extends BaseTimestamp {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -41,17 +39,12 @@ public class Franchise extends BaseTimestamp {
     @Column(name = "max_queue_size", nullable = false)
     private int maxQueueSize;
 
-    @ManyToOne
-    @JoinColumn(name = "merchant_id", nullable = false)
-    private Merchant merchant;
-
     @Column(name = "latitude")
     private double latitude;
 
     @Column(name = "longitude")
     private double longitude;
 
-    @OneToMany(mappedBy = "franchise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "terminal", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Queue> queues;
-
 }

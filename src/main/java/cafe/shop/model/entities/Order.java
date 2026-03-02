@@ -5,8 +5,6 @@ import cafe.shop.model.constant.OrderStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -31,13 +29,20 @@ public class Order extends BaseTimestamp {
     private OrderStatus status;
 
     @ManyToOne
-    @JoinColumn(name = "franchise_id", nullable = false)
-    private Franchise franchise;
+    @JoinColumn(name = "terminal_id", nullable = false)
+    private Terminal terminal;
+
+    @ManyToOne
+    @JoinColumn(name = "recipe_id", nullable = false)
+    private Recipe recipe;
+
+    @Column(name = "volume", nullable = false)
+    private double volume;
+
+    @Column(name = "destination_id")
+    private String destinationId;
 
     @ManyToOne
     @JoinColumn(name = "queue_id")
     private Queue queue;
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderItems = new ArrayList<>();
 }

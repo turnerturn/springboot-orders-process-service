@@ -2,14 +2,10 @@ package cafe.shop.model.entities;
 
 import cafe.shop.model.BaseTimestamp;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Data;
 
 import java.util.UUID;
 
-/**
- *
- */
 @Data
 @Entity
 @Table(name = "customer_scores")
@@ -24,19 +20,17 @@ public class CustomerScore extends BaseTimestamp {
     private User customer;
 
     @ManyToOne
-    @JoinColumn(name = "franchise_id", nullable = false)
-    private Franchise franchise;
+    @JoinColumn(name = "terminal_id", nullable = false)
+    private Terminal terminal;
 
     @Column(name = "score", nullable = false)
     private int score;
 
     public CustomerScore() {
-
     }
 
-    public CustomerScore(User customer, Franchise franchise) {
+    public CustomerScore(User customer, Terminal terminal) {
         this.customer = customer;
-        this.franchise = franchise;
+        this.terminal = terminal;
     }
-
 }

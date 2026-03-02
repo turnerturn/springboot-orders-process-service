@@ -30,10 +30,6 @@ public class CustomerUserDetailService implements UserDetailsService {
         AuthUser authUser = new AuthUser(username, user.getPassword(), authorities);
         authUser.setId(user.getId().toString());
         authUser.setDisplayName(user.getFirstName());
-        if (user.getMerchant() != null) {
-            authUser.setMerchantId(user.getMerchant().getId());
-            authUser.setMerchantName(user.getMerchant().getName());
-        }
         return authUser;
     }
 }

@@ -44,8 +44,4 @@ public class User extends BaseTimestamp {
 
     @Column(name = "address")
     private String address;
-
-    @ManyToOne
-    @JoinColumn(name = "merchant_id")
-    private Merchant merchant;
 }

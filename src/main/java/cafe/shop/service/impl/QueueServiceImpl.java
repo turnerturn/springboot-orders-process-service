@@ -38,11 +38,11 @@ public class QueueServiceImpl extends BaseService implements QueueService {
     private UserRepository userRepository;
 
     @Override
-    public void createQueueByFranchise(Franchise franchise) {
+    public void createQueueByTerminal(Terminal terminal) {
         List<Queue> queueList = new ArrayList<>();
-        for (int i = 0; i < franchise.getNumberOfQueues(); i++) {
+        for (int i = 0; i < terminal.getNumberOfQueues(); i++) {
             Queue queue = new Queue();
-            queue.setFranchise(franchise);
+            queue.setTerminal(terminal);
             queue.setQueueNumber(i + 1);
             queueList.add(queue);
         }
@@ -69,7 +69,7 @@ public class QueueServiceImpl extends BaseService implements QueueService {
         Queue queue = queueRepository.findById(queueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Queue not found"));
 
-        AtomicInteger positionCounter = new AtomicInteger(1);  // Start with 1
+        AtomicInteger positionCounter = new AtomicInteger(1);
         return customerQueueRepository.findAllByQueueOrderByCreatedAtAsc(queue).stream().map(customerQueue -> {
             CustomerQueueDto dto = new CustomerQueueDto();
             dto.setOrderId(customerQueue.getId());
@@ -78,22 +78,16 @@ public class QueueServiceImpl extends BaseService implements QueueService {
             dto.setCustomerName(customerQueue.getCustomer().getFirstName());
             dto.setCustomerPhone(customerQueue.getCustomer().getMobileNumber());
             dto.setCustomerQueueId(customerQueue.getId());
-
-            List<OrderItemDto> orderItemDtoList = customerQueue.getOrder().getOrderItems()
-                    .stream().map(item -> OrderItemDto.builder()
-                            .name(item.getMenuItem().getName())
-                            .quantity(item.getQuantity())
-                            .build())
-                    .collect(Collectors.toList());
-            dto.setOrderItemList(orderItemDtoList);
+            dto.setRecipeName(customerQueue.getOrder().getRecipe().getName());
+            dto.setVolume(customerQueue.getOrder().getVolume());
+            dto.setDestinationId(customerQueue.getOrder().getDestinationId());
             return dto;
         }).collect(Collectors.toList());
-
     }
 
     @Override
-    public List<QueueDto> getQueuesByFranchise(Franchise franchise) {
-        return queueRepository.findAllByFranchise(franchise).stream()
+    public List<QueueDto> getQueuesByTerminal(Terminal terminal) {
+        return queueRepository.findAllByTerminal(terminal).stream()
                 .map(queue -> QueueDto.builder()
                     .id(queue.getId())
                     .queueNumber(queue.getQueueNumber())
@@ -110,37 +104,31 @@ public class QueueServiceImpl extends BaseService implements QueueService {
         CustomerQueue customerQueue = customerQueueRepository.findById(customerQueueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not in queue"));
 
-        // Mark order status
         Order order = customerQueue.getOrder();
         order.setStatus(OrderStatus.SUCCESS);
         orderRepository.save(order);
         log.info("[serviceQueue: {}] - Mark order status: {}", queueId, order.getId());
 
-        // Remove customer from queue
         queue.getCustomerQueues().remove(customerQueue);
         customerQueueRepository.delete(customerQueue);
         log.info("[serviceQueue: {}] - Removed customer from queue", queueId);
 
-        // Find and update the customer score
         log.info("[serviceQueue: {}] - Find and update the customer score: {}, ", queueId, order.getCustomer());
         CustomerScore customerScore = customerScoreRepository.findByCustomer(order.getCustomer()).orElse(null);
         if (customerScore == null) {
-            customerScore = new CustomerScore(order.getCustomer(), order.getFranchise());
+            customerScore = new CustomerScore(order.getCustomer(), order.getTerminal());
         }
         customerScore.setScore(customerScore.getScore() + 1);
         customerScoreRepository.save(customerScore);
-
     }
 
     @Override
     public Queue addOrderToQueue(Order order, User customer) {
-        // Find the available queue for the franchise
-        Queue queue = findAvailableQueue(order.getFranchise());
+        Queue queue = findAvailableQueue(order.getTerminal());
         if (queue == null) {
-            throw new ResourceNotFoundException("No available queue for the franchise");
+            throw new ResourceNotFoundException("No available queue for the terminal");
         }
 
-        // Create a new CustomerQueue entry
         CustomerQueue customerQueue = new CustomerQueue();
         customerQueue.setCustomer(customer);
         customerQueue.setQueue(queue);
@@ -159,21 +147,19 @@ public class QueueServiceImpl extends BaseService implements QueueService {
 
     @Override
     public void removeOrderFromQueue(Queue queue, Order order) {
-        // Find and delete the CustomerQueue entry
         Optional<CustomerQueue> customerQueueOptional = customerQueueRepository.findByOrder(order);
         if (customerQueueOptional.isPresent()) {
             CustomerQueue customerQueue = customerQueueOptional.get();
             customerQueueRepository.delete(customerQueue);
         } else {
-            throw new ResourceNotFoundException("Custome not found in queue");
+            throw new ResourceNotFoundException("Customer not found in queue");
         }
     }
 
-    private Queue findAvailableQueue(Franchise franchise) {
-        // Find the first available queue for the franchise
-        List<Queue> queueList = queueRepository.findAllByFranchise(franchise);
+    private Queue findAvailableQueue(Terminal terminal) {
+        List<Queue> queueList = queueRepository.findAllByTerminal(terminal);
         return queueList.stream()
-                .filter(queue -> this.getCustomerQueueSize(queue) < franchise.getMaxQueueSize())
+                .filter(queue -> this.getCustomerQueueSize(queue) < terminal.getMaxQueueSize())
                 .findFirst()
                 .orElse(null);
     }
