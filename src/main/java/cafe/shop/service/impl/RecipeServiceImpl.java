@@ -7,6 +7,8 @@ import cafe.shop.model.entities.Additive;
 import cafe.shop.model.entities.Product;
 import cafe.shop.model.entities.Recipe;
 import cafe.shop.model.entities.Terminal;
+import cafe.shop.exception.RecipeNotFoundException;
+import cafe.shop.exception.TerminalNotFoundException;
 import cafe.shop.repository.RecipeRepository;
 import cafe.shop.repository.TerminalRepository;
 import cafe.shop.service.BaseService;
@@ -31,7 +33,7 @@ public class RecipeServiceImpl extends BaseService implements RecipeService {
     @Override
     public List<RecipeDto> createRecipe(UUID terminalId, List<RecipeDto> recipeDtos) {
         Terminal terminal = terminalRepository.findById(terminalId)
-                .orElseThrow(() -> new RuntimeException("Terminal not found"));
+                .orElseThrow(() -> new TerminalNotFoundException("Terminal not found with id: " + terminalId));
 
         List<Recipe> recipes = recipeDtos.stream().map(dto -> {
             Recipe recipe = new Recipe();
@@ -67,10 +69,10 @@ public class RecipeServiceImpl extends BaseService implements RecipeService {
     @Override
     public RecipeDto updateRecipe(UUID terminalId, UUID recipeId, RecipeDto recipeDto) {
         Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new RuntimeException("Recipe not found"));
+                .orElseThrow(() -> new RecipeNotFoundException("Recipe not found with id: " + recipeId));
 
         if (!recipe.getTerminal().getId().equals(terminalId)) {
-            throw new RuntimeException("Terminal mismatch");
+            throw new TerminalNotFoundException("Recipe does not belong to terminal with id: " + terminalId);
         }
 
         recipe.setName(recipeDto.getName());
@@ -81,10 +83,10 @@ public class RecipeServiceImpl extends BaseService implements RecipeService {
     @Override
     public void deleteRecipe(UUID terminalId, UUID recipeId) {
         Recipe recipe = recipeRepository.findById(recipeId)
-                .orElseThrow(() -> new RuntimeException("Recipe not found"));
+                .orElseThrow(() -> new RecipeNotFoundException("Recipe not found with id: " + recipeId));
 
         if (!recipe.getTerminal().getId().equals(terminalId)) {
-            throw new RuntimeException("Terminal mismatch");
+            throw new TerminalNotFoundException("Recipe does not belong to terminal with id: " + terminalId);
         }
 
         recipeRepository.delete(recipe);

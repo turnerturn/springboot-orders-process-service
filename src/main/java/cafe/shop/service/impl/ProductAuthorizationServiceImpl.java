@@ -3,6 +3,8 @@ package cafe.shop.service.impl;
 import cafe.shop.model.dto.ProductAuthorizationDto;
 import cafe.shop.model.entities.Product;
 import cafe.shop.model.entities.ProductAuthorization;
+import cafe.shop.exception.ProductAuthorizationNotFoundException;
+import cafe.shop.exception.ProductNotFoundException;
 import cafe.shop.repository.ProductAuthorizationRepository;
 import cafe.shop.repository.ProductRepository;
 import cafe.shop.service.BaseService;
@@ -26,7 +28,7 @@ public class ProductAuthorizationServiceImpl extends BaseService implements Prod
     @Override
     public ProductAuthorizationDto createProductAuthorization(ProductAuthorizationDto dto) {
         Product product = productRepository.findById(dto.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + dto.getProductId()));
 
         ProductAuthorization auth = new ProductAuthorization();
         auth.setProduct(product);
@@ -48,7 +50,7 @@ public class ProductAuthorizationServiceImpl extends BaseService implements Prod
     @Override
     public void deleteProductAuthorization(UUID authorizationId) {
         ProductAuthorization auth = productAuthorizationRepository.findById(authorizationId)
-                .orElseThrow(() -> new RuntimeException("Product authorization not found"));
+                .orElseThrow(() -> new ProductAuthorizationNotFoundException("Product authorization not found with id: " + authorizationId));
         productAuthorizationRepository.delete(auth);
     }
 
